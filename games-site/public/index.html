@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Game Stash</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>Ultimate Game Stash</h1>
+  <input type="text" id="search" placeholder="Search games..." />
+  <button id="prevPage">Prev</button>
+  <button id="nextPage">Next</button>
+  <span id="pageInfo"></span>
+</header>
+<main id="gameList" class="games-grid"></main>
+
+<script>
+let currentPage = 1;
+const limit = 50;
+
+async function loadGames(page = 1) {
+  const search = document.getElementById("search").value;
+  try {
+    const res = await fetch(`/games+img.json?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+      // Handle raw array fallback (maintaining search and pagination functionality)
+      if (Array.isArray(data)) {
+        let filtered = data;
+        if (search) {
+          filtered = filtered.filter(g => g.title.toLowerCase().includes(search.toLowerCase()));
+        }
+        data = {
+          games: filtered.slice((page - 1) * limit, page * limit),
+          total: filtered.length,
+          page: page
+        };
+      }
+    } catch (e) {
+      console.error("Failed to parse JSON:", text);
+      throw e;
+    }
+
+    if (!data.games) throw new Error("Invalid response");
+
+    const gameList = document.getElementById("gameList");
+    gameList.innerHTML = "";
+    data.games.forEach(g => {
+      const a = document.createElement("a");
+      a.className = "game-card";
+      // Redirect to a local play route that will handle fetching and headers
+      a.href = `/play?url=${encodeURIComponent(g.url)}&title=${encodeURIComponent(g.title)}`;
+      a.innerHTML = `
+        <div class="thumbnail-container">
+          <img src="${g.image || ""}" alt="${g.title}" loading="lazy" />
+        </div>
+        <div class="game-info">
+          <div class="game-title">${g.title}</div>
+        </div>
+      `;
+      gameList.appendChild(a);
+    });
+
+    // Update pagination info
+    const totalPages = Math.ceil(data.total / limit);
+    document.getElementById("pageInfo").textContent = `Page ${data.page} / ${totalPages}`;
+    currentPage = data.page;
+
+    // Disable/enable buttons
+    document.getElementById("prevPage").disabled = currentPage <= 1;
+    document.getElementById("nextPage").disabled = currentPage >= totalPages;
+  } catch (err) {
+    console.error("Failed to load games:", err);
+    document.getElementById("gameList").innerHTML = "<p>Error loading games.</p>";
+  }
+}
+
+// Event listeners
+document.getElementById("prevPage").addEventListener("click", () => {
+  if (currentPage > 1) loadGames(currentPage - 1);
+});
+document.getElementById("nextPage").addEventListener("click", () => loadGames(currentPage + 1));
+document.getElementById("search").addEventListener("input", () => loadGames(1));
+
+// Initial load
+loadGames();
+</script>
+</body>
+</html>

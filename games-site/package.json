@@ -1,0 +1,16 @@
+{
+  "name": "games-site",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "description": "",
+  "main": "update-images.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fflate": "^0.8.2"
+  }
+}

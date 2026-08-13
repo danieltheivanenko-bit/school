@@ -1,0 +1,11 @@
+[collections]
+name = "ultimate-game-stash"
+mapping = "public"
+
+[build]
+functions.installers = ["node_modules/.bin/next"]
+functions.node_modules = ["node_modules"]
+functions.base_path = "/next"
+
+[environments]
+default = "production"
